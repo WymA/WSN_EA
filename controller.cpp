@@ -1,0 +1,91 @@
+#include <QDebug>
+#include <QGraphicsScene>
+#include <QPainter>
+#include <QBrush>
+#include "controller.h"
+
+
+
+Controller::Controller(QGraphicsScene* dScene, QGraphicsScene *fScene, QObject *parent) :
+    diagramScene(dScene),
+    fieldScene(fScene),
+    QObject(parent)
+{
+
+
+    worker = new EAWorker ;
+    worker->moveToThread( &workerThread );
+
+
+    connect( &workerThread, &QThread::finished, worker, &QObject::deleteLater ) ;
+
+    workerThread.start();
+
+    //Graphics related initialized
+    diagram = new Diagram ;
+    diagramScene->addItem( diagram );
+
+    fieldSimulator = new FieldSimulator;
+    fieldScene->addItem( fieldSimulator ) ;
+
+
+
+    //Control signals and slots connections
+    connect( this, &Controller::paraSignal, worker, &EAWorker::setPara ) ;
+    connect( this, &Controller::NSGA2Signal, worker, &EAWorker::setNSGA2 ) ;
+    connect( this, &Controller::MOEADSignal, worker, &EAWorker::setMOEAD ) ;
+    connect( this, &Controller::EAStartPauseSignal, worker, &EAWorker::startPauseEA ) ;
+    connect( this, &Controller::EAStopSignal, worker, &EAWorker::stopEA ) ;
+    connect( this, &Controller::singleRun, worker, &EAWorker::singleRun ) ;
+
+
+    connect( worker, &EAWorker::updatePiant,
+             this, &Controller::setDiagramPoints  );
+
+    setPara() ;//For test
+}
+
+Controller::~Controller()
+{
+    workerThread.quit();
+    workerThread.wait();
+}
+
+void Controller::startPauseEA()
+{
+    initialize() ;
+    emit EAStartPauseSignal();
+}
+
+void Controller::initialize()
+{
+    for( int i = 0 ; i < para->pop_size ; i++){
+
+        DiagramPoint* dp = new DiagramPoint() ;
+        diagramPoints.push_back(dp);
+        diagramScene->addItem( dp );
+    }
+}
+
+void Controller::setPara()
+{
+    Field* field = new Field( 500, 30, 30 ) ;
+    para = new Para(field, 100, 1000, 0.8, 0.8 ) ;
+}
+
+void Controller::setDiagramPoints(QVector<Indiv> vec )
+{
+    for ( int i = 0 ; i < vec.size() ; i++ ){
+
+        //qDebug() << worker->getCache()[i].y_var[0]<<' '<<worker->getCache()[i].y_var[1] ;
+        diagramPoints[i]->setPoint( vec[i] ) ;
+    }
+
+    qDebug()<< vec[0].y_var[kObjNodes] - vec[0].penalty<<' '<< vec[0].y_var[kObjEnergy] - vec[0].penalty ;
+    fieldSimulator->setIndiv(vec[0]);
+
+    diagramScene->update();
+    fieldScene->update();
+    emit singleRun() ;
+}
+
