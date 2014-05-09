@@ -10,13 +10,14 @@
 #include "fieldsimulator.h"
 
 class QGraphicsScene ;
+class DashBoard ;
 
 class Controller : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit Controller(QGraphicsScene* dScene , QGraphicsScene* fScene, QObject *parent = 0);
+    explicit Controller(QGraphicsScene* dScene , QGraphicsScene* fScene, DashBoard *dBoard, QObject *parent = 0 );
     ~Controller() ;
 
     QVector<Indiv> getCaches() ;
@@ -34,7 +35,7 @@ signals:
 
 public slots:
     void startPauseEA() ;
-    void setDiagramPoints(QVector<Indiv> vec) ;
+    void setDiagramPoints(QVector<Indiv> vec, QString info) ;
     void setPara() ;
     void initialize() ;
 
@@ -46,6 +47,7 @@ private:
     //Graphics items
     QGraphicsScene* diagramScene ;
     QGraphicsScene* fieldScene ;
+    DashBoard* dashBoard ;
 
     Diagram* diagram ;
     QVector<DiagramPoint*> diagramPoints ;

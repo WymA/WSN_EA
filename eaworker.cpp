@@ -71,10 +71,10 @@ void EAWorker::singleRun()
     if ( ( ea->getCurGen() > para->total_gen) || state != kRunning )
         return ;
 
-    ea->SingleRun();
+    QString info = ea->SingleRun();
     setCache() ;
 
-    emit updatePiant( getCache() );
+    emit updatePiant( getCache(), info );
 }
 
 void EAWorker::startPauseEA()

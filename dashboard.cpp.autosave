@@ -26,4 +26,6 @@ DashBoard::DashBoard(QWidget *parent) :
 void DashBoard::printLine( const QString& line )
 {
     infoViewer->setText( infoViewer->toPlainText() +'\n' +line) ;
+    
+    this->set
 }

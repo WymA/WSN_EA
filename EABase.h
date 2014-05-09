@@ -176,7 +176,7 @@ public:
     EABase() ;
     virtual ~EABase() ;
 
-    virtual void SingleRun() = 0 ;
+    virtual QString SingleRun() = 0 ;
     virtual void Initialize() = 0 ;
     virtual int  Execute() = 0 ;
     void InitPara( const Para& para ) ;

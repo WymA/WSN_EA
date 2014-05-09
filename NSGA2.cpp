@@ -4,7 +4,8 @@ This .cpp file contains the implementation of NSGA2's details.
 #include "NSGA2.h"
 
 
-NSGA2Indiv::NSGA2Indiv(): rank(0), crowd_dist(0.0), counter(0)
+NSGA2Indiv::NSGA2Indiv():
+    rank(0), crowd_dist(0.0), counter(0)
 {
 }
 
@@ -16,17 +17,17 @@ NSGA2Indiv::~NSGA2Indiv()
 //Tool function .
 bool CompareByNum( const NSGA2Indiv& a, const NSGA2Indiv& b )
 {
-    return ( a.y_var[kObjNodes] < b.y_var[kObjNodes] ) ;
+    return ( a.indiv.y_var[kObjNodes] < b.indiv.y_var[kObjNodes] ) ;
 }
 
 bool CompareByEnergy(const NSGA2Indiv &a, const NSGA2Indiv &b )
 {
-    return ( a.y_var[kObjEnergy] < b.y_var[kObjEnergy ] ) ;
+    return ( a.indiv.y_var[kObjEnergy] < b.indiv.y_var[kObjEnergy ] ) ;
 }
 
 bool CompareByPareto(const NSGA2Indiv &a, const NSGA2Indiv &b )
 {
-    TCompare res = Compare( a, b ) ;
+    TCompare res = Compare( a.indiv, b.indiv ) ;
 
     if ( res == kParetoDominating ||
          res == kParetoEqual &&
@@ -64,7 +65,7 @@ NSGA2::~NSGA2()
 
 Indiv &NSGA2::getIndiv(const int& idx )
 {
-    return population[idx] ;
+    return population[idx].indiv ;
 }
 
 void NSGA2::InitPopulation()
@@ -75,16 +76,18 @@ void NSGA2::InitPopulation()
 
     for ( int i = 0 ; i < pop_size ; i++){
 
-        NSGA2Indiv* ind = new NSGA2Indiv ;
-        InitGeneratorInd( ind ) ;
-        population.push_back(*ind) ;
+        NSGA2Indiv ind  ;
+        InitGeneratorInd( &ind.indiv ) ;
+        population.push_back( ind ) ;
     }
 
 }
 
 void NSGA2::FastNondominatedSort()
 {
-    pareto_front.clear() ;
+    for ( int i = 0 ; i < pareto_front.size() ; i++ )
+        pareto_front[i].clear() ;
+    pareto_front.clear();
 
     vector<NSGA2Indiv> next_front ;
 
@@ -98,7 +101,7 @@ void NSGA2::FastNondominatedSort()
 
             for ( int q = 0 ; q < population.size()  ; q++ ) {
 
-                TCompare res = Compare( population[p], population[q]) ;
+                TCompare res = Compare( population[p].indiv, population[q].indiv ) ;
                 if ( kParetoDominated == res )
                     population[p].counter++ ;
             }
@@ -156,7 +159,7 @@ void NSGA2::CrowdDistAssign( vector<NSGA2Indiv>& set )
         set[0].crowd_dist = set[size-1].crowd_dist = kInfinite ;
 
         for ( int j = 1 ; j < size-1 ; j++ )
-            set[j].crowd_dist += ( set[j+1].y_var[i] - set[j-1].y_var[i] ) ;
+            set[j].crowd_dist += ( set[j+1].indiv.y_var[i] - set[j-1].indiv.y_var[i] ) ;
 
     }
 
@@ -196,18 +199,17 @@ void NSGA2::GenSelection()
 
         parent1 = Tournament( &population[a1[i]], &population[a1[i+1]] );
         parent2 = Tournament( &population[a1[i+2]], &population[a1[i+3]] );
-        GenCrossInd( parent1, parent2, &child1, &child2 );
+        GenCrossInd( &parent1->indiv, &parent2->indiv, &child1.indiv, &child2.indiv );
         offspring.push_back(child1) ;
         offspring.push_back(child2) ;
 
-        child1.destrory();
-        child2.destrory();
+        NSGA2Indiv child3, child4 ;
 
         parent1 = Tournament( &population[a2[i]], &population[a2[i+1]] );
         parent2 = Tournament( &population[a2[i+2]], &population[a2[i+3]] );
-        GenCrossInd( parent1, parent2, &child1, &child2 );
-        offspring.push_back(child1) ;
-        offspring.push_back(child2) ;
+        GenCrossInd( &parent1->indiv, &parent2->indiv, &child3.indiv, &child4.indiv );
+        offspring.push_back(child3) ;
+        offspring.push_back(child4) ;
 
     }
 
@@ -218,7 +220,7 @@ void NSGA2::GenSelection()
 NSGA2Indiv* NSGA2::Tournament( NSGA2Indiv* ind1, NSGA2Indiv* ind2 )
 {
 
-    TCompare res = Compare( *ind1, *ind2) ;
+    TCompare res = Compare( ind1->indiv, ind2->indiv ) ;
 
     if ( res == kParetoDominating ) return ind1 ;
     if ( res == kParetoDominated ) return ind2 ;
@@ -255,7 +257,7 @@ void NSGA2::Evaluation()
     for ( vector<NSGA2Indiv>::iterator it = population.begin() ;
           it != population.end() ; it++ ){
 
-        EvaluateInd( &(*it) ) ;
+        EvaluateInd( &(it->indiv) ) ;
     }
 }
 
@@ -266,7 +268,7 @@ void NSGA2::GenMutation()
 
     for ( vector<NSGA2Indiv>::iterator it = population.begin() ;
           it != population.end() ; it++ )
-        GenMutationInd( &(*it) ) ;
+        GenMutationInd( &(it->indiv) ) ;
 
 }
 
@@ -274,16 +276,16 @@ double NSGA2::GetBestObj( const int& obj )
 {
     SortByObj( population, obj ) ;
 
-    return population[0].y_var[obj] ;
+    return population[0].indiv.y_var[obj] ;
 }
 
 void NSGA2::PrintData()
 {
-    double maxc = population[0].converage ;
+    double maxc = population[0].indiv.converage ;
 
     for ( int i = 0 ; i < population.size() ; i++ )
-        if ( population[i].converage > maxc )
-            maxc = population[i].converage ;
+        if ( population[i].indiv.converage > maxc )
+            maxc = population[i].indiv.converage ;
 
     cout<< "Energy: "<<GetBestObj(kObjEnergy) << ' ' ;
     cout<< "Nodes: " <<GetBestObj(kObjNodes) << ' ' ;
@@ -297,7 +299,7 @@ void NSGA2::Initialize()
     cur_gen = 1 ;
 }
 
-void NSGA2::SingleRun()
+QString NSGA2::SingleRun()
 {
     cout<< "Gen " << cur_gen << ":  " ;
 

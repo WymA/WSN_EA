@@ -22,7 +22,7 @@ public:
 signals:
 
     //void setPoints( QVector<Indiv>& vec ) ;
-    void updatePiant( QVector<Indiv> vec ) ;
+    void updatePiant( QVector<Indiv> vec, QString info ) ;
 
 public slots:
     void startPauseEA() ;

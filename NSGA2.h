@@ -2,9 +2,11 @@
 #define NSGA2_H
 #include "EABase.h"
 
-class NSGA2Indiv: public Indiv
+class NSGA2Indiv
 {
 public:
+    Indiv indiv ;
+
     int rank ;
     double crowd_dist ;
 
@@ -33,7 +35,7 @@ public:
     virtual ~NSGA2();
 
     void Initialize();
-    void SingleRun() ;
+    QString SingleRun() ;
     int Execute() ;
 
 

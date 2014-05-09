@@ -64,7 +64,11 @@ Indiv::Indiv( const Indiv& ind )
 
 Indiv& Indiv::operator=( const Indiv& ind )
 {
+
     if ( this != &ind ){
+
+        if ( this->x_var )
+            destrory();
 
         x_var = new XNode ;
         x_var->x_pos = gxHECN ;
@@ -102,7 +106,7 @@ Indiv::~Indiv()
 
 void Indiv::setCenter( const XNode& x )
 {
-    if ( x_var != NULL )
+    if ( x_var )
         delete x_var ;
 
     x_var = new XNode(x) ;
@@ -113,9 +117,11 @@ void Indiv::setCenter( const XNode& x )
 void Indiv::insert( XNode* parent , const XNode& x )
 {
     XNode* new_node = new XNode(x) ;
-    parent->neigh.push_back(new_node);
     new_node->parent = parent ;
+    parent->neigh.push_back(new_node);
+
     size++ ;
+
     return ;
 }
 
@@ -147,7 +153,7 @@ int Indiv::height( XNode* node )
 
 XNode* Indiv::randomize( )
 {
-    int n = 1 + qrand() % ( height( this->x_var ) - 1 );
+    int n = qrand() % ( height( this->x_var )+1 );
 
     XNode* tmp = x_var ;
 
@@ -170,16 +176,16 @@ void Indiv::destrory()
 
 void Indiv::remove( XNode* node )
 {
-    if ( node == NULL )
-        return ;
+    if ( node ) {
 
-    for ( int i = 0 ; i < node->neigh.size() ; i++ )
-        remove( node->neigh[i] ) ;
+        for ( int i = 0 ; i < node->neigh.size() ; i++ )
+            remove( node->neigh[i] ) ;
 
-    node->neigh.clear();
-    delete node ;
-    node = NULL ;
-    size-- ;
+        delete node ;
+        node = NULL ;
+        size-- ;
+
+    }
 }
 
 XNode* Indiv::randLeaf(int &idx )
@@ -211,6 +217,7 @@ void Indiv::rmRandNode()
 
     if ( idx != -1 ) {
 
+        delete parent->neigh[idx] ;
         parent->neigh.erase( parent->neigh.begin() + idx ) ;
         size-- ;
     }
@@ -456,26 +463,62 @@ void EABase::GenCrossInd( Indiv* ind1, Indiv* ind2, Indiv* child1, Indiv* child2
          ind2->size > min_size
          ){
 
-        int mut1 = qrand() % ind1->x_var->neigh.size() ;
-        int mut2 = qrand() % ind2->x_var->neigh.size() ;
+
+
+        //        int pnt1 = qrand() % ind1->x_var->neigh.size() ;
+        //        int pnt2 = qrand() % ind2->x_var->neigh.size() ;
+//        for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
+//            if ( Distance( *ind2->x_var->neigh[i], *ind1->x_var->neigh[pnt1] )
+//                 < gRadComm )
+//                pnt2 = i ;
+
+//        vector<XNode> vec1, vec2 ;
+
+//        //This is the crossover part ;
+//        ind1->getVector( vec1, ind2->x_var->neigh[pnt2] );
+//        ind2->getVector( vec2, ind1->x_var->neigh[pnt1] );
+
+//        //The other x variables copying
+//        for ( int i = 0 ; i < ind1->x_var->neigh.size()  ; i++ )
+//            if ( i != pnt1 )
+//                ind1->getVector( vec1, ind1->x_var->neigh[i] );
+//        for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
+//            if ( i != pnt2 )
+//                ind2->getVector( vec2, ind2->x_var->neigh[i] );
+
+        int pnt1[2] ;
+        int pnt2[2] ;
+
+        pnt1[0] = qrand() % ind1->x_var->neigh.size() ;
+        pnt1[1] = qrand() % ind1->x_var->neigh.size() ;
+
+        pnt2[0] = qrand() % ind2->x_var->neigh.size() ;
+        pnt2[1] = qrand() % ind2->x_var->neigh.size() ;
 
         for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
-            if ( Distance( *ind2->x_var->neigh[i], *ind1->x_var->neigh[mut1] )
+            if ( Distance( *ind2->x_var->neigh[i], *ind1->x_var->neigh[pnt1[0]] )
                  < gRadComm )
-                mut2 = i ;
+                pnt2[0] = i ;
+
+        for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
+            if ( Distance( *ind2->x_var->neigh[i], *ind1->x_var->neigh[pnt1[1]] )
+                 < gRadComm && pnt2[0] != i)
+                pnt2[1] = i ;
 
         vector<XNode> vec1, vec2 ;
 
         //This is the crossover part ;
-        ind1->getVector( vec1, ind2->x_var->neigh[mut2] );
-        ind2->getVector( vec2, ind1->x_var->neigh[mut1] );
+        ind1->getVector( vec1, ind2->x_var->neigh[pnt2[0]] );
+        ind1->getVector( vec1, ind2->x_var->neigh[pnt2[1]] );
+        ind2->getVector( vec2, ind1->x_var->neigh[pnt1[0]] );
+        ind2->getVector( vec2, ind1->x_var->neigh[pnt1[1]] );
 
         //The other x variables copying
         for ( int i = 0 ; i < ind1->x_var->neigh.size()  ; i++ )
-            if ( i != mut1 )
+            if ( i != pnt1[0] && i != pnt1[1] )
                 ind1->getVector( vec1, ind1->x_var->neigh[i] );
         for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
-            if ( i != mut2 )
+            if ( i != pnt2[0] && i != pnt2[1])
                 ind2->getVector( vec2, ind2->x_var->neigh[i] );
 
         //Build the child trees
@@ -525,7 +568,7 @@ void EABase::InitGeneratorInd( Indiv* ind )
     node.x_pos = gxHECN ;
     node.y_pos = gyHECN ;
 
-    ind->setCenter(node) ;//The 1st value is the position of HECN
+    ind->setCenter( node ); ;//The 1st value is the position of HECN
 
     //This value equals four times the theoretical lower bound for the number of nodes necessary
     int num = 4 * pow(double(gFieldLength-1), 2.0 )
@@ -589,7 +632,7 @@ void EABase::EvaluateInd( Indiv* ind )
     ind->y_var[kObjEnergy] += penalty ;
     ind->penalty = penalty ;
 
-    qDebug()<< penalty ;
+    //qDebug()<< penalty ;
 
 }
 

@@ -66,12 +66,12 @@ void MOEAD::InitWeight()
 
     for ( int i = 0 ; i < pop_size ; i++ ){
 
-        SubProblem* sub = new SubProblem ;
+        SubProblem sub ;
 
-        sub->lambda.push_back( 1.0*(i)/scalar_num ) ;
-        sub->lambda.push_back( 1.0*(scalar_num-i)/scalar_num ) ;
+        sub.lambda.push_back( 1.0*(i)/scalar_num ) ;
+        sub.lambda.push_back( 1.0*(scalar_num-i)/scalar_num ) ;
 
-        population.push_back( *sub) ;
+        population.push_back( sub ) ;
     }
 }
 
@@ -218,25 +218,29 @@ void MOEAD::Initialize()
     cur_gen = 1 ;
 }
 
-void MOEAD::SingleRun()
+QString MOEAD::SingleRun()
 {
-    qDebug()<< QThread::currentThread() ;
     Evolution() ;
+    cur_gen++ ;
 
-    cout<< "Gen "<< cur_gen<< " :" ;
-    cout<< "Nodes: " << GetBestObj( kObjNodes ) << ' ' ;
-    cout<< "Energy: "<< GetBestObj( kObjEnergy )<< ' ' ;
 
     double maxc = population[0].indiv.converage ;
 
     for ( int i = 0 ; i < population.size() ; i++ )
         if ( population[i].indiv.converage > maxc )
             maxc = population[i].indiv.converage ;
-    cout<< "Converage: " << maxc<<endl ;
 
-    cur_gen++ ;
+    QString output ;
 
 
+    output.append( "Gen "+ QString::number(cur_gen) +": " );
+    output.append( " Nodes=" + QString::number(GetBestObj( kObjNodes )) ) ;
+    output.append( " Energy=" + QString::number(GetBestObj( kObjEnergy ))) ;
+    output.append( " Converage: " + QString::number(maxc) ) ;
+
+    qDebug() << output ;
+
+    return output ;
 }
 
 int MOEAD::Execute()

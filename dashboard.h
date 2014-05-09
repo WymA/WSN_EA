@@ -3,6 +3,10 @@
 
 #include <QWidget>
 
+
+class QPushButton ;
+class QTextEdit;
+
 class DashBoard : public QWidget
 {
     Q_OBJECT
@@ -14,6 +18,12 @@ signals:
 
 
 public slots:
+    void printLine( const QString& line ) ;
+
+private:
+
+    QPushButton* startbt ;
+    QTextEdit* infoViewer ;
 
 };
 

@@ -23,7 +23,7 @@ Widget::Widget(QWidget *parent) :
     ui->setupUi(this);
 
 
-    resize(1280, 640 ) ;
+    resize(1400, 640 ) ;
 
     //Initialize the view and scene
     diagramScene = new QGraphicsScene ;
@@ -31,18 +31,15 @@ Widget::Widget(QWidget *parent) :
     fieldScene = new QGraphicsScene ;
     fieldView = new QGraphicsView(fieldScene) ;
     dashBoard = new DashBoard(this) ;
-    controller = new Controller( diagramScene, fieldScene ) ;
+    controller = new Controller( diagramScene, fieldScene, dashBoard ) ;
 
     //Layout
-    layout->addWidget( diagramView, 0, 0, 3, 3 ) ;
-    layout->addWidget( dashBoard, 0, 3, 3, 1 );
+    layout->addWidget( diagramView, 0, 0, 4, 4 ) ;
+    layout->addWidget( dashBoard, 0, 4, 4, 2 );
 
     //DashBoard* t = new DashBoard;
-    layout->addWidget( fieldView, 0, 4, 3, 3 );
+    layout->addWidget( fieldView, 0, 6, 4, 4 );
 
-    //#Connections between controller and widget
-    connect( dashBoard, &DashBoard::startPauseEA,
-             controller, &Controller::startPauseEA ) ;
 
 }
 

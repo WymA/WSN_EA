@@ -38,7 +38,7 @@ public:
 
     void Initialize() ;
     int Execute() ;
-    void SingleRun() ;
+    QString SingleRun() ;
 
     Indiv& getIndiv(const int &idx) ;
 
