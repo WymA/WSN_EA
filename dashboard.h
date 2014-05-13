@@ -15,7 +15,8 @@ public:
 
 signals:
     void startPauseEA() ;
-
+    void stopEA() ;
+    void settingSignal() ;
 
 public slots:
     void printLine( const QString& line ) ;
@@ -23,6 +24,8 @@ public slots:
 private:
 
     QPushButton* startbt ;
+    QPushButton* stopbt ;
+    QPushButton* setbt ;
     QTextEdit* infoViewer ;
 
 };

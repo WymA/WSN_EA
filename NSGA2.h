@@ -59,7 +59,7 @@ private:
     void SortByObj( vector<NSGA2Indiv>& set, const int& idx ) ;
     void SortByPareto( vector<NSGA2Indiv>& set ) ;
 
-    double GetBestObj( const int& obj ) ;
+    void GetBestObj( const int& obj ) ;
 
     void PrintData() ;
 };

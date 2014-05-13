@@ -12,7 +12,7 @@ enum kRunningState{
 
 const double kPlotSize = 250 ;
 const double kPointSize = 3 ;
-
+const double kSensorSize = 6.0 ;
 
 
 #endif // CONSTANTS_H

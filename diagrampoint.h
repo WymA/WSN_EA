@@ -15,7 +15,7 @@ public:
     QRectF boundingRect() const ;
     void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0) ;
     QPainterPath shape() const;
-    void setPoint( const Indiv& ind ) ;
+    void setPoint(const Indiv& ind , const Indiv &best, const Indiv &worst) ;
 
 protected:
     void advance(int step);

@@ -4,7 +4,7 @@
 #include <QBrush>
 #include "controller.h"
 #include "dashboard.h"
-
+#include "setdialog.h"
 
 
 Controller::Controller(QGraphicsScene* dScene,
@@ -17,10 +17,10 @@ Controller::Controller(QGraphicsScene* dScene,
     QObject(parent)
 {
 
-
     worker = new EAWorker ;
     worker->moveToThread( &workerThread );
 
+    state = kStopping ;
 
     connect( &workerThread, &QThread::finished, worker, &QObject::deleteLater ) ;
 
@@ -33,10 +33,7 @@ Controller::Controller(QGraphicsScene* dScene,
     fieldSimulator = new FieldSimulator;
     fieldScene->addItem( fieldSimulator ) ;
 
-
-
     //Control signals and slots connections
-    connect( this, &Controller::paraSignal, worker, &EAWorker::setPara ) ;
     connect( this, &Controller::NSGA2Signal, worker, &EAWorker::setNSGA2 ) ;
     connect( this, &Controller::MOEADSignal, worker, &EAWorker::setMOEAD ) ;
     connect( this, &Controller::EAStartPauseSignal, worker, &EAWorker::startPauseEA ) ;
@@ -50,9 +47,18 @@ Controller::Controller(QGraphicsScene* dScene,
     //#Connections between controller and widget
     connect( dashBoard, &DashBoard::startPauseEA,
              this, &Controller::startPauseEA ) ;
+    connect( dashBoard, &DashBoard::stopEA,
+             this, &Controller::stopEA ) ;
+    connect( dashBoard, &DashBoard::settingSignal,
+             this, &Controller::setting ) ;
 
 
-    setPara() ;//For test
+
+    defaultPara() ;//Set the default parameter
+
+    //The setting dialog
+    setDialog = new SetDialog( field_len, rad_sens, rad_comm,
+                               pop_size, total_gen, mut_rate, cross_rate ) ;
 }
 
 Controller::~Controller()
@@ -61,15 +67,64 @@ Controller::~Controller()
     workerThread.wait();
 }
 
+void Controller::setting()
+{
+    if ( state != kStopping ){
+
+        dashBoard->printLine( "The algorithm is running. Cannot change the parameters now.\n" );
+        return ;
+    }
+
+    if ( SetDialog::Accepted == setDialog->exec() ){
+
+
+        field_len = setDialog->getFieldLength() ;
+        rad_sens = setDialog->getRadSens() ;
+        rad_comm = setDialog->getRadComm() ;
+        pop_size = setDialog->getPopSize() ;
+        total_gen =  setDialog->getTotalGen();
+        cross_rate = setDialog->getCrossRate() ;
+        mut_rate = setDialog->getMutRate() ;
+
+        worker->setPara( field_len, rad_sens, rad_comm,
+                         pop_size, total_gen, cross_rate, mut_rate );
+        dashBoard->printLine("Setting succeed!\n") ;
+    }
+}
+
+void Controller::stopEA()
+{
+    if ( state == kStopping )
+        return ;
+
+    dashBoard->printLine( tr("EA thread stopping...\n") );
+    emit EAStopSignal();
+
+    state = kStopping ;
+}
+
 void Controller::startPauseEA()
 {
+
     initialize() ;
+
     emit EAStartPauseSignal();
+
+    if ( state == kRunning ){
+
+        dashBoard->printLine( tr("EA thread pausing...\n") );
+        state = kPausing ;
+    }else{
+
+        dashBoard->printLine( tr("EA thread starting...\n") );
+        state = kRunning ;
+    }
+
 }
 
 void Controller::initialize()
 {
-    for( int i = 0 ; i < para->pop_size ; i++){
+    for( int i = 0 ; i < pop_size ; i++){
 
         DiagramPoint* dp = new DiagramPoint() ;
         diagramPoints.push_back(dp);
@@ -77,27 +132,40 @@ void Controller::initialize()
     }
 }
 
-void Controller::setPara()
+void Controller::defaultPara()
 {
-    Field* field = new Field( 500, 30, 30 ) ;
-    para = new Para(field, 100, 1000, 0.8, 0.8 ) ;
+
+    field_len = 500 ;
+    rad_sens = 30 ;
+    rad_comm = 30 ;
+    pop_size = 100 ;
+    total_gen = 2000;
+    cross_rate = 0.8 ;
+    mut_rate = 0.8 ;
+
+    worker->setPara( field_len, rad_sens, rad_comm,
+                     pop_size, total_gen, cross_rate, mut_rate );
 }
 
-void Controller::setDiagramPoints( QVector<Indiv> vec, QString info )
+void Controller::setDiagramPoints( QVector<Indiv> vec, QString info, Indiv best, Indiv worst )
 {
+    Indiv display = vec[0] ;
+
     for ( int i = 0 ; i < vec.size() ; i++ ){
 
-        //qDebug() << worker->getCache()[i].y_var[0]<<' '<<worker->getCache()[i].y_var[1] ;
-        diagramPoints[i]->setPoint( vec[i] ) ;
+        if ( display.converage < vec[i].converage )
+            display = vec[i] ;
+
+        diagramPoints[i]->setPoint( vec[i], best, worst ) ;
     }
 
-    qDebug()<< vec[0].y_var[kObjNodes] - vec[0].penalty<<' '<< vec[0].y_var[kObjEnergy] - vec[0].penalty ;
-    fieldSimulator->setIndiv(vec[0]);
+    fieldSimulator->setIndiv(display);
 
     diagramScene->update();
     fieldScene->update();
 
-    dashBoard->printLine( info );
+    if ( state == kRunning )
+        dashBoard->printLine( info );
 
     emit singleRun() ;
 }

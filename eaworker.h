@@ -4,9 +4,7 @@
 #include <QObject>
 #include <QVector>
 #include <QThreadStorage>
-
 #include <QMutex>
-
 #include "Constants.h"
 #include "EABase.h"
 #include "NSGA2.h"
@@ -21,8 +19,7 @@ public:
 
 signals:
 
-    //void setPoints( QVector<Indiv>& vec ) ;
-    void updatePiant( QVector<Indiv> vec, QString info ) ;
+    void updatePiant( QVector<Indiv> vec, QString info, Indiv best, Indiv worst ) ;
 
 public slots:
     void startPauseEA() ;
@@ -31,14 +28,15 @@ public slots:
 
     void setNSGA2() ;
     void setMOEAD() ;
-    void setPara() ;
+    void setPara( int f_len, int r_sens, int r_comm,
+                  int p_size, int t_gen, double c_rate, double m_rate ) ;
 
     void setCache() ;
-
     void singleRun() ;
 
     QVector<Indiv> getCache() ;
 
+    //kRunningState getState() { return state; }
 
 private:
     MOEAD moead ;

@@ -61,6 +61,10 @@ public:
         cross_rate(c_rate),
         mutation_rate(m_rate)
     {  }
+    ~Para()
+    {
+        delete field_map ;
+    }
 };
 
 /************************************************************************************
@@ -82,16 +86,34 @@ public:
         parent = NULL ;
     }
 
-    XNode( const XNode& node ):
-        x_pos(node.x_pos),
-        y_pos(node.y_pos)
+    XNode( const XNode& other )
     {
-        parent = NULL ;
+        if ( this != &other ){
+
+            x_pos = other.x_pos ;
+            y_pos = other.y_pos ;
+
+            parent = other.parent ;
+        }
     }
 
     ~XNode()
     {
         neigh.clear();
+
+    }
+
+    XNode& operator=( const XNode& other )
+    {
+        if ( this != &other ){
+
+            x_pos = other.x_pos ;
+            y_pos = other.y_pos ;
+
+            parent = other.parent ;
+
+            return *this ;
+        }
     }
 };
 
@@ -185,10 +207,16 @@ public:
     int getSize() { return pop_size ; }
     virtual Indiv& getIndiv( const int& idx ) = 0 ;
 
+    inline Indiv& getBestInd() { return best_ind ; }
+    inline Indiv& getWorstInd() { return worst_ind ; }
 
 protected:
 
     Field* field ;
+
+    Indiv best_ind ;
+    Indiv worst_ind ;
+
     //************************************************
     // Basic parameters of EA
     //***********************************************
@@ -198,6 +226,9 @@ protected:
     double cross_rate ;
     double mutation_rate ;
     int min_size ;
+
+
+
 
     void InitGeneratorInd( Indiv* ind ) ;
     XNode PosGenerator() ;

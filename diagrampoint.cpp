@@ -31,6 +31,7 @@ void DiagramPoint::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 {
     painter->save();
 
+    painter->setRenderHint(QPainter::Antialiasing);
     painter->drawPath( shape() );
 
     painter->restore();
@@ -44,14 +45,15 @@ void DiagramPoint::advance(int step)
     return ;
 }
 
-void DiagramPoint::setPoint( const Indiv& ind )
+void DiagramPoint::setPoint( const Indiv& ind, const Indiv& best, const Indiv& worst )
 {
     point = ind ;
 
-    qreal x =  2*kPlotSize*(1.0 - 1.0/(point.y_var[kObjNodes] /*- point.penalty - 300 */)) - kPlotSize ;
-    qreal y =  kPlotSize  - 2*kPlotSize*(1.0 - 1.0/(point.y_var[kObjEnergy]/* - point.penalty - 5.0 */)) ;
+    qreal _X = worst.y_var[kObjNodes] - best.y_var[kObjNodes] + 5;
+    qreal _Y = worst.y_var[kObjEnergy] - best.y_var[kObjEnergy] + 5 ;
 
-    //qDebug()<< point.y_var[kObjNodes] - point.penalty<<' '<< point.y_var[kObjEnergy] - point.penalty ;
+    qreal x =  ( 2*kPlotSize / _X )*( point.y_var[kObjNodes] - best.y_var[kObjNodes] + 5)  - kPlotSize ;
+    qreal y =  -( 2*kPlotSize / _Y )*( point.y_var[kObjEnergy] - best.y_var[kObjEnergy] + 5) + kPlotSize ;
 
     setPos( x, y ) ;
 }

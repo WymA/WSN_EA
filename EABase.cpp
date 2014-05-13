@@ -465,61 +465,61 @@ void EABase::GenCrossInd( Indiv* ind1, Indiv* ind2, Indiv* child1, Indiv* child2
 
 
 
-        //        int pnt1 = qrand() % ind1->x_var->neigh.size() ;
-        //        int pnt2 = qrand() % ind2->x_var->neigh.size() ;
-//        for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
-//            if ( Distance( *ind2->x_var->neigh[i], *ind1->x_var->neigh[pnt1] )
-//                 < gRadComm )
-//                pnt2 = i ;
-
-//        vector<XNode> vec1, vec2 ;
-
-//        //This is the crossover part ;
-//        ind1->getVector( vec1, ind2->x_var->neigh[pnt2] );
-//        ind2->getVector( vec2, ind1->x_var->neigh[pnt1] );
-
-//        //The other x variables copying
-//        for ( int i = 0 ; i < ind1->x_var->neigh.size()  ; i++ )
-//            if ( i != pnt1 )
-//                ind1->getVector( vec1, ind1->x_var->neigh[i] );
-//        for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
-//            if ( i != pnt2 )
-//                ind2->getVector( vec2, ind2->x_var->neigh[i] );
-
-        int pnt1[2] ;
-        int pnt2[2] ;
-
-        pnt1[0] = qrand() % ind1->x_var->neigh.size() ;
-        pnt1[1] = qrand() % ind1->x_var->neigh.size() ;
-
-        pnt2[0] = qrand() % ind2->x_var->neigh.size() ;
-        pnt2[1] = qrand() % ind2->x_var->neigh.size() ;
-
+        int pnt1 = qrand() % ind1->x_var->neigh.size() ;
+        int pnt2 = qrand() % ind2->x_var->neigh.size() ;
         for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
-            if ( Distance( *ind2->x_var->neigh[i], *ind1->x_var->neigh[pnt1[0]] )
+            if ( Distance( *ind2->x_var->neigh[i], *ind1->x_var->neigh[pnt1] )
                  < gRadComm )
-                pnt2[0] = i ;
-
-        for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
-            if ( Distance( *ind2->x_var->neigh[i], *ind1->x_var->neigh[pnt1[1]] )
-                 < gRadComm && pnt2[0] != i)
-                pnt2[1] = i ;
+                pnt2 = i ;
 
         vector<XNode> vec1, vec2 ;
 
         //This is the crossover part ;
-        ind1->getVector( vec1, ind2->x_var->neigh[pnt2[0]] );
-        ind1->getVector( vec1, ind2->x_var->neigh[pnt2[1]] );
-        ind2->getVector( vec2, ind1->x_var->neigh[pnt1[0]] );
-        ind2->getVector( vec2, ind1->x_var->neigh[pnt1[1]] );
+        ind1->getVector( vec1, ind2->x_var->neigh[pnt2] );
+        ind2->getVector( vec2, ind1->x_var->neigh[pnt1] );
 
         //The other x variables copying
         for ( int i = 0 ; i < ind1->x_var->neigh.size()  ; i++ )
-            if ( i != pnt1[0] && i != pnt1[1] )
+            if ( i != pnt1 )
                 ind1->getVector( vec1, ind1->x_var->neigh[i] );
         for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
-            if ( i != pnt2[0] && i != pnt2[1])
+            if ( i != pnt2 )
                 ind2->getVector( vec2, ind2->x_var->neigh[i] );
+
+//        int pnt1[2] ;
+//        int pnt2[2] ;
+
+//        pnt1[0] = qrand() % ind1->x_var->neigh.size() ;
+//        pnt1[1] = qrand() % ind1->x_var->neigh.size() ;
+
+//        pnt2[0] = qrand() % ind2->x_var->neigh.size() ;
+//        pnt2[1] = qrand() % ind2->x_var->neigh.size() ;
+
+//        for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
+//            if ( Distance( *ind2->x_var->neigh[i], *ind1->x_var->neigh[pnt1[0]] )
+//                 < gRadComm )
+//                pnt2[0] = i ;
+
+//        for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
+//            if ( Distance( *ind2->x_var->neigh[i], *ind1->x_var->neigh[pnt1[1]] )
+//                 < gRadComm && pnt2[0] != i)
+//                pnt2[1] = i ;
+
+//        vector<XNode> vec1, vec2 ;
+
+//        //This is the crossover part ;
+//        ind1->getVector( vec1, ind2->x_var->neigh[pnt2[0]] );
+//        ind1->getVector( vec1, ind2->x_var->neigh[pnt2[1]] );
+//        ind2->getVector( vec2, ind1->x_var->neigh[pnt1[0]] );
+//        ind2->getVector( vec2, ind1->x_var->neigh[pnt1[1]] );
+
+//        //The other x variables copying
+//        for ( int i = 0 ; i < ind1->x_var->neigh.size()  ; i++ )
+//            if ( i != pnt1[0] && i != pnt1[1] )
+//                ind1->getVector( vec1, ind1->x_var->neigh[i] );
+//        for ( int i = 0 ; i < ind2->x_var->neigh.size()  ; i++ )
+//            if ( i != pnt2[0] && i != pnt2[1])
+//                ind2->getVector( vec2, ind2->x_var->neigh[i] );
 
         //Build the child trees
         child1->buildTree( vec1, child1->x_var );

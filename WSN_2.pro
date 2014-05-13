@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     diagrampoint.cpp \
     diagram.cpp \
     eaworker.cpp \
-    fieldsimulator.cpp
+    fieldsimulator.cpp \
+    setdialog.cpp
 
 HEADERS  += widget.h \
     EABase.h \
@@ -36,6 +37,7 @@ HEADERS  += widget.h \
     diagrampoint.h \
     diagram.h \
     eaworker.h \
-    fieldsimulator.h
+    fieldsimulator.h \
+    setdialog.h
 
 FORMS    += widget.ui

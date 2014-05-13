@@ -58,7 +58,7 @@ private:
     double DistVector( vector<double>& vec1, vector<double>& vec2 ) ;
     void MinSort(double* dist, int* idx, const int& pop_size, const int& neigh) ;
 
-    double GetBestObj( const int& obj ) ;
+    void GetBestObj( const int& obj ) ;
 };
 
 

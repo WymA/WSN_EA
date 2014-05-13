@@ -29,7 +29,6 @@ public:
     ~Widget();
 
     int length()  ;
-    //void setPara() ;
 
 signals:
 

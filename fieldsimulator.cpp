@@ -44,17 +44,34 @@ void FieldSimulator::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setPen( Qt::red );
 
-//    for ( int i = 0 ; i < indiv.x_var.size() ; i++ ){
+    vector<XNode> vec ;
 
-//        QPainterPath p ;
-//        p.addEllipse( -kPlotSize + indiv.x_var[i].x_pos, -kPlotSize + indiv.x_var[i].y_pos, 6.0, 6.0);
-//        painter->fillPath(p, Qt::red  );
+    indiv.getVector( vec, indiv.x_var );
 
-//        painter->setPen( Qt::black );
-//        for ( vector<int>::iterator it = indiv.x_var[i].neigh.begin() ; it != indiv.x_var[i].neigh.end() ; it++ )
-//            painter->drawLine( -kPlotSize + indiv.x_var[i].x_pos, -kPlotSize + indiv.x_var[i].y_pos ,
-//                               -kPlotSize + indiv.x_var[*it].x_pos, -kPlotSize + indiv.x_var[*it].y_pos );
-//    }
+
+
+    for ( int i = 1 ; i < vec.size() ; i++ ){
+
+        painter->setPen( Qt::black );
+        if ( vec[i].parent )
+            painter->drawLine( -kPlotSize + vec[i].x_pos , -kPlotSize + vec[i].y_pos ,
+                               -kPlotSize + vec[i].parent->x_pos , -kPlotSize + vec[i].parent->y_pos );
+
+        QPainterPath p ;
+        p.addEllipse( -kPlotSize + vec[i].x_pos - kSensorSize/2,
+                      -kPlotSize + vec[i].y_pos - kSensorSize/2,
+                      kSensorSize, kSensorSize);
+        painter->fillPath(p, Qt::red  );
+
+
+    }
+
+    QPainterPath hecn ;
+    hecn.addEllipse( -kPlotSize + vec[0].x_pos - kSensorSize/2 ,
+            -kPlotSize + vec[0].y_pos  - kSensorSize/2,
+            kSensorSize,
+            kSensorSize);
+    painter->fillPath( hecn, Qt::green  );
 
     painter->restore();
 }

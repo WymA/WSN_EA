@@ -187,22 +187,20 @@ double MOEAD::Scalarizing( vector<double>& y_var, vector<double>& lambda )
     return max ;
 }
 
-double MOEAD::GetBestObj( const int& obj )
+void MOEAD::GetBestObj( const int& obj )
 {
-    double min = population[0].indiv.y_var[obj] ;
-
-    //cout<< min << endl ;
+    best_ind.y_var[obj] = population[0].indiv.y_var[obj] ;
+    worst_ind.y_var[obj] = population[0].indiv.y_var[obj] ;
 
     for ( int i = 0 ;  i < population.size() ; i++ ){
 
-        //cout<< it->indiv.y_var[obj] << ' ' ;
-        if ( min > population[i].indiv.y_var[obj] )
-            min = population[i].indiv.y_var[obj] ;
+        if ( best_ind.y_var[obj] > population[i].indiv.y_var[obj] )
+            best_ind.y_var[obj] = population[i].indiv.y_var[obj] ;
+
+        if ( worst_ind.y_var[obj] < population[i].indiv.y_var[obj] )
+            worst_ind.y_var[obj] = population[i].indiv.y_var[obj] ;
     }
 
-    //cout<< endl ;
-
-    return min ;
 }
 
 
@@ -221,8 +219,6 @@ void MOEAD::Initialize()
 QString MOEAD::SingleRun()
 {
     Evolution() ;
-    cur_gen++ ;
-
 
     double maxc = population[0].indiv.converage ;
 
@@ -230,15 +226,20 @@ QString MOEAD::SingleRun()
         if ( population[i].indiv.converage > maxc )
             maxc = population[i].indiv.converage ;
 
+    GetBestObj( kObjNodes ) ;
+    GetBestObj( kObjEnergy ) ;
+
     QString output ;
 
-
     output.append( "Gen "+ QString::number(cur_gen) +": " );
-    output.append( " Nodes=" + QString::number(GetBestObj( kObjNodes )) ) ;
-    output.append( " Energy=" + QString::number(GetBestObj( kObjEnergy ))) ;
+    output.append( " Nodes=" + QString::number( best_ind.y_var[kObjNodes] ) ) ;
+    output.append( " Energy=" + QString::number( best_ind.y_var[kObjEnergy] ) ) ;
     output.append( " Converage: " + QString::number(maxc) ) ;
 
     qDebug() << output ;
+
+
+    cur_gen++ ;
 
     return output ;
 }
