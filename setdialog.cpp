@@ -3,19 +3,23 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QComboBox>
 #include "setdialog.h"
 
 
 SetDialog::SetDialog(    int f_length, int r_sens,  int r_comm,
-                         int pop, int t_gen, double m_rate, double c_rate ) :
+                         int pop, int t_gen, double m_rate, double c_rate, kMOEA ea) :
     field_length(f_length),
     rad_sens(r_sens),
     rad_comm(r_comm),
     pop_size(pop),
     total_gen(t_gen),
     mut_rate(m_rate),
-    cross_rate(c_rate)
+    cross_rate(c_rate),
+    EA(ea)
 {
+    this->setWindowTitle( "Setting" );
+
     QGridLayout* layout = new QGridLayout(this) ;
 
     inFieldLength = new QSpinBox(this) ;
@@ -42,12 +46,14 @@ SetDialog::SetDialog(    int f_length, int r_sens,  int r_comm,
     layout->addWidget( label, 5, 0, 1, 1 );
     label = new QLabel(tr("Mutation Rate(%):"), this );
     layout->addWidget( label, 6, 0, 1, 1 );
+    label = new QLabel(tr("Algorithms Options:"), this );
+    layout->addWidget( label, 7, 0, 1, 1 );
 
     inFieldLength->setRange( 0, 500 );
     inRadSens->setRange( 0, 100 );
     inRadComm->setRange( 0, 100 );
     inPopSize->setRange( 0, 500 );
-    inTotalGen->setRange( 0, 5000 ) ;
+    inTotalGen->setRange( 0, 10000 ) ;
     inCrossRate->setRange( 0, 100 );
     inMutRate->setRange( 0, 100 ) ;
 
@@ -68,6 +74,12 @@ SetDialog::SetDialog(    int f_length, int r_sens,  int r_comm,
     layout->addWidget( inCrossRate, 5, 1, 1, 1 );
     layout->addWidget( inMutRate, 6, 1, 1, 1 );
 
+    inMOEA = new QComboBox ;
+
+    inMOEA->addItem( "MOEA/D" );
+    inMOEA->addItem( "NSGA-II" );
+    layout->addWidget( inMOEA, 7, 1, 1, 1 );
+
     QHBoxLayout* vLayout = new QHBoxLayout ;
 
     QPushButton* okey = new QPushButton("Okey") ;
@@ -75,7 +87,7 @@ SetDialog::SetDialog(    int f_length, int r_sens,  int r_comm,
 
     vLayout->addWidget( okey, 0 ) ;
     vLayout->addWidget( cancel, 0 ) ;
-    layout->addLayout( vLayout, 7, 0, 1, 2 ) ;
+    layout->addLayout( vLayout, 8, 0, 1, 2 ) ;
 
     this->setLayout( layout );
 
@@ -94,6 +106,7 @@ SetDialog::~SetDialog()
     delete inTotalGen ;
     delete inCrossRate ;
     delete inMutRate ;
+    delete inMOEA ;
 }
 
 void SetDialog::setData()
@@ -105,6 +118,11 @@ void SetDialog::setData()
     total_gen = inTotalGen->value() ;
     cross_rate = inCrossRate->value()/100.0 ;
     mut_rate = inMutRate->value()/100.0 ;
+
+    if ( 0 == inMOEA->currentIndex() )
+        EA = kMOEAD ;
+    else if ( 1 == inMOEA->currentIndex() )
+        EA = kNSGA2 ;
 
     emit accept() ;
 }

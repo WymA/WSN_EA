@@ -1,20 +1,14 @@
 #include "Field.h"
 
-int gFieldLength ;
-int gRadSens ;
-int gRadComm ;
-int gxHECN ;
-int gyHECN ;
+int gFieldLength = 500 + 1 ;
+int gRadSens = 30 ;
+int gRadComm = 30 ;
+int gxHECN = 250 ;
+int gyHECN = 250 ;
 
 
-Field::Field( int len, int r_sens, int r_comm )
+Field::Field( )
 {
-    gFieldLength = len+1 ;
-    gRadSens = r_sens ;
-    gRadComm = r_comm ;
-
-    gxHECN = (len+1)/2 ;
-    gyHECN = (len+1)/2 ;
 
     field_map = new int*[gFieldLength] ;
 
@@ -24,6 +18,7 @@ Field::Field( int len, int r_sens, int r_comm )
     for ( int i = 0 ; i < gFieldLength ; i++)
         for ( int j = 0 ; j < gFieldLength ; j++ )
             field_map[i][j] = 0 ;
+
 }
 
 Field::~Field()
@@ -35,16 +30,26 @@ Field::~Field()
 
 }
 
+void Field::SetParameters(int field_length, int rad_sens, int rad_comm)
+{
+    gFieldLength = field_length+1 ;
+    gRadSens = rad_sens ;
+    gRadComm = rad_comm ;
+    gxHECN = gFieldLength/2 ;
+    gyHECN = gFieldLength/2 ;
+}
+
 int Field::ConveredPoint()
 {
-    int counter = 0 ;
+//    int counter = 0 ;
 
-    for ( int i = 0 ; i < gFieldLength ; i++ )
-        for ( int j = 0 ; j < gFieldLength ; j++ )
-            if ( field_map[i][j] )
-                counter++ ;
+//    for ( int i = 0 ; i < gFieldLength ; i++ )
+//        for ( int j = 0 ; j < gFieldLength ; j++ )
+//            if ( field_map[i][j] )
+//                counter++ ;
 
-    return counter ;
+//    return counter ;
+    return 0;
 }
 
 void Field::ClearMap()
@@ -54,4 +59,31 @@ void Field::ClearMap()
             field_map[i][j] = 0 ;
 
     return ;
+}
+
+Field::Field(const Field& other)
+{
+    if ( this != &other ){
+
+        field_map = new int*[gFieldLength] ;
+
+        for ( int i = 0 ; i < gFieldLength ; i++ )
+            field_map[i] = new int[gFieldLength] ;
+
+        for ( int i = 0 ; i < gFieldLength ; i++ )
+            for ( int j = 0 ; j < gFieldLength ; j++ )
+                this->field_map[i][j] = other.field_map[i][j] ;
+    }
+}
+
+Field& Field::operator=( const Field& other )
+{
+    if ( this != &other ){
+
+        for ( int i = 0 ; i < gFieldLength ; i++ )
+            for ( int j = 0 ; j < gFieldLength ; j++ )
+                this->field_map[i][j] = other.field_map[i][j] ;
+
+        return *this ;
+    }
 }

@@ -90,11 +90,13 @@ void NSGA2::FastNondominatedSort()
     pareto_front.clear();
 
     vector<NSGA2Indiv> next_front ;
+    vector<int> index ;
 
 
     for ( int i = 1 ; !population.empty() ; i++ ){
 
         next_front.clear() ;
+        index.clear();
         for ( int p = 0 ; p < population.size() ; p++ ){
 
             population[p].counter = 0 ;
@@ -110,10 +112,13 @@ void NSGA2::FastNondominatedSort()
 
                 population[p].rank = i ;
                 next_front.push_back( population[p] ) ;
-                population.erase( population.begin() + p ) ;
+                index.push_back(p);
             }
 
         }
+        for ( int idx = index.size()-1 ; idx >= 0 ; idx-- )
+            population.erase( population.begin() + index[idx] ) ;
+
         pareto_front.push_back( next_front ) ;
 
     }
@@ -272,24 +277,8 @@ void NSGA2::GenMutation()
 
 }
 
-//double NSGA2::GetBestObj( const int& obj )
-//{
-//    SortByObj( population, obj ) ;
-
-//    return population[0].indiv.y_var[obj] ;
-//}
-
 void NSGA2::PrintData()
 {
-    //    double maxc = population[0].indiv.converage ;
-
-    //    for ( int i = 0 ; i < population.size() ; i++ )
-    //        if ( population[i].indiv.converage > maxc )
-    //            maxc = population[i].indiv.converage ;
-
-    //    cout<< "Energy: "<<GetBestObj(kObjEnergy) << ' ' ;
-    //    cout<< "Nodes: " <<GetBestObj(kObjNodes) << ' ' ;
-    //    cout<< "Converage: " << maxc << endl ;
 }
 
 void NSGA2::GetBestObj( const int& obj )
@@ -310,8 +299,6 @@ void NSGA2::Initialize()
 
 QString NSGA2::SingleRun()
 {
-    cout<< "Gen " << cur_gen << ":  " ;
-
     GenSelection()  ;
     GenMutation() ;
 
@@ -331,7 +318,6 @@ QString NSGA2::SingleRun()
         CrowdDistAssign( pareto_front[i] ) ;
         population.insert( population.end(), pareto_front[i].begin(), pareto_front[i].end() );
 
-
     }
 
     if ( population.size() < pop_size ){
@@ -341,11 +327,11 @@ QString NSGA2::SingleRun()
                            pareto_front[i].begin() + pop_size - population.size() );//Offset
     }
 
-    double maxc = population.begin()->indiv.converage ;
+    double maxc = population.begin()->indiv.coverage ;
 
     for ( int i = 0 ; i < population.size() ; i++ )
-        if ( population[i].indiv.converage > maxc )
-            maxc = population[i].indiv.converage ;
+        if ( population[i].indiv.coverage > maxc )
+            maxc = population[i].indiv.coverage ;
 
     GetBestObj( kObjNodes ) ;
     GetBestObj( kObjEnergy ) ;
@@ -356,8 +342,6 @@ QString NSGA2::SingleRun()
     output.append( " Nodes=" + QString::number( best_ind.y_var[kObjNodes] ) ) ;
     output.append( " Energy=" + QString::number( best_ind.y_var[kObjEnergy] ) ) ;
     output.append( " Converage: " + QString::number(maxc) ) ;
-
-    qDebug() << output ;
 
     cur_gen++ ;
 

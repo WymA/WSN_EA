@@ -1,10 +1,17 @@
 #include <QDebug>
 #include <QGraphicsScene>
 #include <QPainter>
+#include <QFile>
 #include <QBrush>
 #include "controller.h"
 #include "dashboard.h"
 #include "setdialog.h"
+
+
+bool CompareForPareto( const Indiv& ind1, const Indiv& ind2 )
+{
+    return ind1.y_var[kObjNodes] < ind2.y_var[kObjNodes] ;
+}
 
 
 Controller::Controller(QGraphicsScene* dScene,
@@ -20,7 +27,8 @@ Controller::Controller(QGraphicsScene* dScene,
     worker = new EAWorker ;
     worker->moveToThread( &workerThread );
 
-    state = kStopping ;
+    moea = kMOEAD ;
+    display = kBestCoverage ;
 
     connect( &workerThread, &QThread::finished, worker, &QObject::deleteLater ) ;
 
@@ -34,14 +42,13 @@ Controller::Controller(QGraphicsScene* dScene,
     fieldScene->addItem( fieldSimulator ) ;
 
     //Control signals and slots connections
-    connect( this, &Controller::NSGA2Signal, worker, &EAWorker::setNSGA2 ) ;
-    connect( this, &Controller::MOEADSignal, worker, &EAWorker::setMOEAD ) ;
+    connect( this, &Controller::SetEA, worker, &EAWorker::setEA ) ;
     connect( this, &Controller::EAStartPauseSignal, worker, &EAWorker::startPauseEA ) ;
     connect( this, &Controller::EAStopSignal, worker, &EAWorker::stopEA ) ;
     connect( this, &Controller::singleRun, worker, &EAWorker::singleRun ) ;
 
 
-    connect( worker, &EAWorker::updatePiant,
+    connect( worker, &EAWorker::updatePaint,
              this, &Controller::setDiagramPoints  );
 
     //#Connections between controller and widget
@@ -51,6 +58,15 @@ Controller::Controller(QGraphicsScene* dScene,
              this, &Controller::stopEA ) ;
     connect( dashBoard, &DashBoard::settingSignal,
              this, &Controller::setting ) ;
+    connect( dashBoard, &DashBoard::outputSignal,
+             this, &Controller::out2File ) ;
+
+    connect( dashBoard, &DashBoard::displayCoverage,
+             this, &Controller::change2Coverage ) ;
+    connect( dashBoard, &DashBoard::displayEnergy,
+             this, &Controller::change2Energy ) ;
+    connect( dashBoard, &DashBoard::displayNodes,
+             this, &Controller::change2Nodes ) ;
 
 
 
@@ -58,7 +74,7 @@ Controller::Controller(QGraphicsScene* dScene,
 
     //The setting dialog
     setDialog = new SetDialog( field_len, rad_sens, rad_comm,
-                               pop_size, total_gen, mut_rate, cross_rate ) ;
+                               pop_size, total_gen, mut_rate, cross_rate, moea ) ;
 }
 
 Controller::~Controller()
@@ -69,7 +85,7 @@ Controller::~Controller()
 
 void Controller::setting()
 {
-    if ( state != kStopping ){
+    if ( worker->getState() != kStopping ){
 
         dashBoard->printLine( "The algorithm is running. Cannot change the parameters now.\n" );
         return ;
@@ -85,22 +101,38 @@ void Controller::setting()
         total_gen =  setDialog->getTotalGen();
         cross_rate = setDialog->getCrossRate() ;
         mut_rate = setDialog->getMutRate() ;
+        moea = setDialog->getEA() ;
 
         worker->setPara( field_len, rad_sens, rad_comm,
                          pop_size, total_gen, cross_rate, mut_rate );
+
+        emit SetEA( moea ) ;
+
         dashBoard->printLine("Setting succeed!\n") ;
+    }
+}
+
+void Controller::out2File()
+{
+    QFile data("pareto_front.log");
+    if (data.open(QFile::WriteOnly | QIODevice::Truncate)) {
+
+        QTextStream out(&data);
+
+        for ( int i = 0 ; i < pareto_front.size() ; i++ )
+            out << pareto_front[i].y_var[kObjNodes] - pareto_front[i].penalty<< "\t"
+                << pareto_front[i].y_var[kObjEnergy] - pareto_front[i].penalty<< "\t"
+                   << pareto_front[i].penalty<<"\r\n";
     }
 }
 
 void Controller::stopEA()
 {
-    if ( state == kStopping )
+    if ( worker->getState() == kStopping )
         return ;
 
     dashBoard->printLine( tr("EA thread stopping...\n") );
     emit EAStopSignal();
-
-    state = kStopping ;
 }
 
 void Controller::startPauseEA()
@@ -110,14 +142,12 @@ void Controller::startPauseEA()
 
     emit EAStartPauseSignal();
 
-    if ( state == kRunning ){
+    if (  worker->getState() == kRunning ){
 
         dashBoard->printLine( tr("EA thread pausing...\n") );
-        state = kPausing ;
     }else{
 
         dashBoard->printLine( tr("EA thread starting...\n") );
-        state = kRunning ;
     }
 
 }
@@ -130,6 +160,18 @@ void Controller::initialize()
         diagramPoints.push_back(dp);
         diagramScene->addItem( dp );
     }
+
+    for ( int i = 0 ; i < diagramPoints.size() ; i++ )
+        connect( diagramPoints[i], &DiagramPoint::sendIndiv,
+                 this, &Controller::setSimuIndiv ) ;
+}
+
+void Controller::setSimuIndiv( Indiv ind )
+{
+    qDebug() << "----------------" ;
+
+    fieldSimulator->setIndiv( ind );
+    fieldScene->update();
 }
 
 void Controller::defaultPara()
@@ -147,26 +189,105 @@ void Controller::defaultPara()
                      pop_size, total_gen, cross_rate, mut_rate );
 }
 
-void Controller::setDiagramPoints( QVector<Indiv> vec, QString info, Indiv best, Indiv worst )
+void Controller::pop2Front( QVector<Indiv>& vec )
 {
-    Indiv display = vec[0] ;
+    QVector<int> dominated = QVector<int>( vec.size(), 0 ) ;
 
     for ( int i = 0 ; i < vec.size() ; i++ ){
 
-        if ( display.converage < vec[i].converage )
-            display = vec[i] ;
+        for ( int j = i+1 ; j < vec.size() ; j++ ){
 
-        diagramPoints[i]->setPoint( vec[i], best, worst ) ;
+            TCompare res = Compare( vec[i], vec[j] ) ;
+
+            if ( kParetoDominating == res )
+                dominated[j]++ ;
+            if ( kParetoDominated == res )
+                dominated[i]++ ;
+        }
     }
 
-    fieldSimulator->setIndiv(display);
+    pareto_front.clear();
+
+    bestCoverage = vec[0] ;
+    bestNodes = vec[0] ;
+    bestEnergy = vec[0] ;
+
+    for ( int i = 0 ; i < vec.size() ; i++ ){
+
+        if ( bestCoverage.coverage < vec[i].coverage )
+            bestCoverage = vec[i] ;
+        if ( bestNodes.y_var[kObjNodes] > vec[i].y_var[kObjNodes] )
+            bestNodes = vec[i] ;
+        if ( bestEnergy.y_var[kObjEnergy] > vec[i].y_var[kObjEnergy] )
+            bestEnergy = vec[i] ;
+
+        if ( !dominated[i] )
+            pareto_front.push_back(vec[i]);
+    }
+
+    sort( pareto_front.begin(), pareto_front.end(), CompareForPareto) ;
+
+    dominated.clear();
+}
+
+void Controller::setDiagramPoints( QVector<Indiv> vec, QString info, Indiv best, Indiv worst )
+{
+    pop2Front( vec );
+
+    diagram->setFront( pareto_front, best, worst );
+
+    for ( int i = 0 ; i < vec.size() ; i++ )
+        diagramPoints[i]->setPoint( vec[i], best, worst ) ;
+
+    switch ( display )
+    {
+    case kBestCoverage:
+        fieldSimulator->setIndiv(bestCoverage);
+        break ;
+    case kBestNodes:
+        fieldSimulator->setIndiv(bestNodes);
+        break ;
+    case kBestEnergy:
+        fieldSimulator->setIndiv(bestEnergy);
+        break ;
+    }
 
     diagramScene->update();
     fieldScene->update();
 
-    if ( state == kRunning )
+    if (  worker->getState() == kRunning )
         dashBoard->printLine( info );
 
     emit singleRun() ;
 }
 
+void Controller::change2Coverage()
+{
+    display = kBestCoverage ;
+
+    if ( worker->getState() != kRunning ){
+
+        fieldSimulator->setIndiv(bestCoverage);
+        fieldScene->update();
+    }
+}
+void Controller::change2Nodes()
+{
+    display = kBestNodes ;
+
+    if ( worker->getState() != kRunning ){
+
+        fieldSimulator->setIndiv(bestNodes);
+        fieldScene->update();
+    }
+}
+void Controller::change2Energy()
+{
+    display = kBestEnergy;
+
+    if ( worker->getState() != kRunning ){
+
+        fieldSimulator->setIndiv(bestEnergy);
+        fieldScene->update();
+    }
+}

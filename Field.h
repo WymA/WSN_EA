@@ -7,6 +7,9 @@ extern int gRadComm ;
 extern int gxHECN ;
 extern int gyHECN ;
 
+void SetParameters(int field_length, int rad_sens, int rad_comm) ;
+
+
 class Field
 {
  public:
@@ -15,12 +18,16 @@ class Field
 
  public:
   
-  Field( int len, int r_sens, int r_comm ) ;
+  Field() ;
+  Field(const Field& other) ;
   ~Field() ;
 
   int ConveredPoint() ;
   void ClearMap() ;
+
+  Field& operator=( const Field& other ) ;
   
+  static void SetParameters( int field_length, int rad_sens, int rad_comm ) ;
 };
 
 #endif

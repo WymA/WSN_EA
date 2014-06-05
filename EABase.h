@@ -43,19 +43,17 @@ this class are public accessed.
 class Para
 {
 public:
-    Field* field_map ;
-
     int pop_size ;
     int total_gen ;
     double cross_rate ;
     double mutation_rate ;
     
-    Para(Field* field,
+    Para(
          int p_size,
          int t_gen,
          double c_rate,
          double m_rate
-         ):  field_map(field) ,
+         ):
         pop_size(p_size),
         total_gen(t_gen),
         cross_rate(c_rate),
@@ -63,7 +61,7 @@ public:
     {  }
     ~Para()
     {
-        delete field_map ;
+
     }
 };
 
@@ -76,44 +74,16 @@ public:
     int x_pos ;
     int y_pos ;
 
-    vector<XNode*> neigh ;
-    XNode* parent ;
-
+    bool is_connected ;
     double load ;
+    vector<int> neigh ;
 
-    XNode()
+    XNode(){}
+    XNode( int x, int y ):
+        x_pos(x),
+        y_pos(y)
     {
-        parent = NULL ;
-    }
 
-    XNode( const XNode& other )
-    {
-        if ( this != &other ){
-
-            x_pos = other.x_pos ;
-            y_pos = other.y_pos ;
-
-            parent = other.parent ;
-        }
-    }
-
-    ~XNode()
-    {
-        neigh.clear();
-
-    }
-
-    XNode& operator=( const XNode& other )
-    {
-        if ( this != &other ){
-
-            x_pos = other.x_pos ;
-            y_pos = other.y_pos ;
-
-            parent = other.parent ;
-
-            return *this ;
-        }
     }
 };
 
@@ -123,61 +93,28 @@ Indiv class is the basic class of other individual class.
  **********************************************************/
 class Indiv
 {
-private:
-
-
 public:
 
-    XNode* x_var ;
+    vector<XNode> x_var ;
     vector<double> y_var ;
 
-    double penalty ;
-    double converage ;
-    int size ;
+    vector<int> island ;
 
-    Indiv( const Indiv& ind ) ;
+    double penalty ;
+    double coverage ;
+    int cover_point ;
+
+    Field field ;
+
     Indiv() ;
     virtual ~Indiv() ;
 
-    Indiv& operator=( const Indiv& other ) ;
-
-
-    void destrory() ;
-    XNode *randomize() ;
-    XNode *randLeaf(int &idx) ;
-
-    void insert(XNode *parent, const XNode &x ) ;
-    void remove( XNode* node ) ;
-
-    XNode* getNode( const int& idx, XNode *fetch = 0 ) ;
-    void setCenter( const XNode& x ) ;
-
-    int height( XNode* node ) ;
-
-    void buildTree(vector<XNode> &vec, XNode* node ) ;
-    void clone(XNode *des, XNode *src ) ;
-
-    XNode randGenerator( XNode* node ) ;
-
-    void adjusRandNode() ;
-    void addRandNode( ) ;
-    void rmRandNode() ;
-
-    void clearLoad(XNode *node) ;
-
-    void getVector(vector<XNode> &output, XNode* node ) ;
-
-
-    //********************************************************************
-    // Evaluation functions
-    //********************************************************************
-    void EvaluateEnergy( ) ; //The function to evaluate energy depletion of WSN
-    void EvaluateNodes( ) ;
-    void EvaluateConverage(Field *field) ; //The function to evaluate converage of WSN
-    void Converage(XNode *node, Field* field ) ;
-    double Energy( XNode* node, const int& distance) ;
+    void EvaluateCoverage() ;
+    void SetCover(const XNode &node ) ;
+    void Insert( const vector<XNode>& vec ) ;
+    void AddPoint(const XNode& ref, int num=1 ) ;
+    void RmPoint( const int& pnt ) ;
 };
-
 
 /*****************************************************************************
 Compare function: This function is to compare this object to another ind2 and
@@ -212,8 +149,6 @@ public:
 
 protected:
 
-    Field* field ;
-
     Indiv best_ind ;
     Indiv worst_ind ;
 
@@ -228,20 +163,19 @@ protected:
     int min_size ;
 
 
-
-
-    void InitGeneratorInd( Indiv* ind ) ;
-    XNode PosGenerator() ;
-
-
+    void InitGeneratorInd(Indiv *ind) ;
+    void BuildConnectivity( Indiv* ind ) ;
     void GenCrossInd(Indiv* ind1, Indiv* ind2, Indiv* child1, Indiv* child2 ) ;
     void GenMutationInd( Indiv* ind ) ;
 
     void SetNeighbor( Indiv* ind ) ;
-    void SetConnectivity(vector<XNode> &vec , vector<int> nei) ;
-
+    void SetRoute( Indiv* ind ) ;
+    void SetConnectivity( vector<XNode>& vec, vector<int>& index ) ;
 
     void EvaluateInd( Indiv* ind ) ;
+    void EvaluateEnergy( Indiv* ind ) ; //The function to evaluate energy depletion of WSN
+    void EvaluateNodes( Indiv* ind ) ;
+    void EvaluateConverage( Indiv* ind ) ; //The function to evaluate converage of WSN
 
 };
 

@@ -1,15 +1,17 @@
 #ifndef SETDIALOG_H
 #define SETDIALOG_H
 #include <QDialog>
+#include "Constants.h"
 
 class QSpinBox;
+class QComboBox;
 
 class SetDialog : public QDialog
 {
     Q_OBJECT
 public:
-    SetDialog( int f_length, int r_sens,  int r_comm,
-               int pop, int t_gen, double m_rate, double c_rate);
+    SetDialog(int f_length, int r_sens,  int r_comm,
+               int pop, int t_gen, double m_rate, double c_rate, kMOEA ea);
     ~SetDialog() ;
 
 private:
@@ -23,6 +25,8 @@ private:
     double mut_rate ;
     double cross_rate ;
 
+    kMOEA EA;
+
     QSpinBox* inFieldLength ;
     QSpinBox* inRadSens ;
     QSpinBox* inRadComm ;
@@ -30,6 +34,8 @@ private:
     QSpinBox* inTotalGen ;
     QSpinBox* inCrossRate ;
     QSpinBox* inMutRate ;
+
+    QComboBox* inMOEA ;
 
     void setData() ;
 
@@ -43,6 +49,7 @@ public:
     inline int getTotalGen() const { return total_gen; }
     inline double getMutRate() const { return mut_rate; }
     inline double getCrossRate() const { return cross_rate; }
+    inline kMOEA getEA() const { return EA; }
 
 };
 

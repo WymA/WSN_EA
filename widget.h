@@ -15,9 +15,8 @@ class QGraphicsScene;
 class QGraphicsView ;
 class QGridLayout ;
 class DashBoard ;
-//class Diagram ;
 class Controller ;
-//class Diagram;
+
 
 class Widget : public QWidget
 {

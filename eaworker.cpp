@@ -11,11 +11,13 @@ EAWorker::EAWorker(QObject *parent) :
     QObject(parent),
     ea(0)
 {
-    //timer.start( 1000/3 );
     state = kStopping ;
+    moea = kMOEAD ;
 
     qRegisterMetaType<QVector<Indiv> >("QVector<Indiv> ") ;
     qRegisterMetaType<Indiv>("Indiv") ;
+    qRegisterMetaType<kMOEA>("kMOEA") ;
+
 }
 
 
@@ -43,8 +45,16 @@ void EAWorker::setPara( int f_len,
                         double c_rate,
                         double m_rate )
 {
-    field = new Field( f_len, r_sens, r_comm ) ;
-    para = new Para( field, p_size, t_gen, c_rate, m_rate ) ;
+
+    Field::SetParameters( f_len, r_sens, r_comm ) ;
+    field = new Field() ;
+    para = new Para( p_size, t_gen, c_rate, m_rate ) ;
+}
+
+
+void EAWorker::setEA( kMOEA ea )
+{
+    moea = ea ;
 }
 
 void EAWorker::setNSGA2()
@@ -54,7 +64,7 @@ void EAWorker::setNSGA2()
         if ( ea )
             delete ea ;
 
-        ea = new NSGA2(*para) ;
+        ea = new NSGA2( *para ) ;
     }
 
 }
@@ -74,13 +84,19 @@ void EAWorker::setMOEAD()
 
 void EAWorker::singleRun()
 {
-    if ( ( ea->getCurGen() > para->total_gen) || state != kRunning )
+    if ( ea->getCurGen() > para->total_gen )
+        state = kStopping ;
+
+    if ( state != kRunning )
         return ;
 
     QString info = ea->SingleRun();
     setCache() ;
 
-    emit updatePiant( getCache(), info, ea->getBestInd(), ea->getWorstInd() );
+    emit updatePaint( getCache(), info,
+                      ea->getBestInd(), ea->getWorstInd() );
+
+
 }
 
 void EAWorker::startPauseEA()
@@ -88,10 +104,13 @@ void EAWorker::startPauseEA()
 
     if ( state == kStopping ) {
 
-        setMOEAD();
-        state = kRunning ;
-
+        if ( moea == kMOEAD )
+            setMOEAD();
+        if ( moea == kNSGA2 )
+            setNSGA2();
         ea->Initialize();
+
+        state = kRunning ;
         singleRun();
     }else if ( state == kPausing){
 

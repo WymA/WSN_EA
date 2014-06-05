@@ -25,9 +25,7 @@ public:
     QVector<Indiv> getCaches() ;
 signals:
 
-    void NSGA2Signal() ;
-    void MOEADSignal() ;
-
+    void SetEA( kMOEA ea ) ;
     void EAStartPauseSignal() ;
     void EAStopSignal() ;
 
@@ -42,11 +40,25 @@ public slots:
     void defaultPara() ;
     void initialize() ;
     void setting() ;
+    void out2File() ;
+    void pop2Front( QVector<Indiv>& vec ) ;
+
+    void change2Coverage() ;
+    void change2Nodes() ;
+    void change2Energy() ;
+
+    void setSimuIndiv(Indiv ind ) ;
 
 private:
     QThread workerThread ;
     EAWorker* worker ;
-    kRunningState state ;
+    kMOEA moea ;
+    kDisplay display ;
+    Indiv bestCoverage ;
+    Indiv bestNodes ;
+    Indiv bestEnergy ;
+
+    QVector<Indiv> pareto_front ;
 
     //Graphics items
     QGraphicsScene* diagramScene ;

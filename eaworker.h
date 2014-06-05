@@ -19,12 +19,13 @@ public:
 
 signals:
 
-    void updatePiant( QVector<Indiv> vec, QString info, Indiv best, Indiv worst ) ;
+    void updatePaint( QVector<Indiv> vec, QString info, Indiv best, Indiv worst ) ;
 
 public slots:
     void startPauseEA() ;
     //void pauseEA() ;
     void stopEA() ;
+    void setEA( kMOEA ea ) ;
 
     void setNSGA2() ;
     void setMOEAD() ;
@@ -36,7 +37,7 @@ public slots:
 
     QVector<Indiv> getCache() ;
 
-    //kRunningState getState() { return state; }
+    kRunningState getState() { return state; }
 
 private:
     MOEAD moead ;
@@ -44,6 +45,7 @@ private:
     EABase* ea ;
     Field* field ;
     Para* para ;
+    kMOEA moea ;
 
     QMutex mutex ;
     kRunningState state ;

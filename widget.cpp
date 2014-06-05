@@ -11,7 +11,7 @@
 #include "dashboard.h"
 #include "Constants.h"
 #include "EABase.h"
-
+#include "diagram.h"
 #include "widget.h"
 #include "ui_widget.h"
 
@@ -22,6 +22,7 @@ Widget::Widget(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    this->setWindowTitle( "Wireless Sensor Network Layout Optimization System" );
 
     resize(1400, 640 ) ;
 
@@ -70,8 +71,8 @@ void Widget::paintEvent(QPaintEvent * event)
 
 void Widget::resizeEvent(QResizeEvent * event)
 {
-    diagramScene->setSceneRect( -length(),
-                               -length(),
-                               2*length() ,
-                               2*length());
+    diagramScene->setSceneRect( -kPlotSize,
+                               -kPlotSize,
+                               2*kPlotSize ,
+                               2*kPlotSize);
 }

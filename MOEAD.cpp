@@ -60,9 +60,6 @@ void MOEAD::InitWeight()
     InitGeneratorInd( &ref_point ) ;
     EvaluateInd( &ref_point) ;
 
-    Indiv temp(ref_point) ;
-    temp.destrory() ;
-
 
     for ( int i = 0 ; i < pop_size ; i++ ){
 
@@ -146,8 +143,6 @@ void MOEAD::UpdateProblem( Indiv& ind, const int& idx )
 
 void MOEAD::Evolution()
 {
-
-
     for ( int i = 0 ; i < population.size() ; i++ ){
 
         Indiv child1, child2 ;
@@ -156,7 +151,6 @@ void MOEAD::Evolution()
 
         int p1 = population[i].neigh[r1] ;
         int p2 = population[i].neigh[r2] ;
-
 
         GenCrossInd( &population[p1].indiv, &population[p2].indiv, &child1, &child2 ) ;
         GenMutationInd( &child1 ) ;
@@ -220,11 +214,11 @@ QString MOEAD::SingleRun()
 {
     Evolution() ;
 
-    double maxc = population[0].indiv.converage ;
+    double maxc = population[0].indiv.coverage ;
 
     for ( int i = 0 ; i < population.size() ; i++ )
-        if ( population[i].indiv.converage > maxc )
-            maxc = population[i].indiv.converage ;
+        if ( population[i].indiv.coverage > maxc )
+            maxc = population[i].indiv.coverage ;
 
     GetBestObj( kObjNodes ) ;
     GetBestObj( kObjEnergy ) ;
@@ -235,9 +229,6 @@ QString MOEAD::SingleRun()
     output.append( " Nodes=" + QString::number( best_ind.y_var[kObjNodes] ) ) ;
     output.append( " Energy=" + QString::number( best_ind.y_var[kObjEnergy] ) ) ;
     output.append( " Converage: " + QString::number(maxc) ) ;
-
-    qDebug() << output ;
-
 
     cur_gen++ ;
 

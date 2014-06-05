@@ -6,6 +6,7 @@
 #include <QLineF>
 #include "EABase.h"
 
+
 class FieldSimulator: public QGraphicsItem
 {
 public:
@@ -18,6 +19,8 @@ public:
 private:
     Indiv indiv ;
     QVector<QLineF> bgh, bgv;
+
+
     //int index;
 };
 
